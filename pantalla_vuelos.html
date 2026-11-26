@@ -36,7 +36,8 @@ h1{font-size:clamp(24px,3vw,34px);line-height:1.05;margin:0;font-weight:700}
 .rt{font-size:clamp(18px,2vw,26px);margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
 .rt small{color:var(--mut);font-size:.7em}
 .data{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:12px 18px;margin-top:16px}
-.data div{font-family:"B612 Mono",monospace;font-size:clamp(17px,1.8vw,22px);white-space:nowrap}
+.data div{font-family:"B612 Mono",monospace;font-size:clamp(17px,1.8vw,22px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.data .w2{grid-column:span 2}
 .data b{display:block;font:400 12px B612,sans-serif;color:var(--mut)}
 .idle{display:grid;place-items:center;min-height:250px;text-align:center;color:var(--mut);font-size:clamp(20px,2.5vw,28px)}
 .idle small{display:block;font-size:14px;margin-top:6px}
@@ -57,7 +58,7 @@ h1{font-size:clamp(24px,3vw,34px);line-height:1.05;margin:0;font-weight:700}
 .lbl{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;font:11px "B612 Mono",monospace;color:#6f87a0}
 .lbl.c{font-size:13px;color:#b8c9da;font-weight:700}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
-.chip{flex:1 1 150px;min-height:44px;font:700 15px B612,sans-serif;background:transparent;color:var(--c);border:1px solid var(--line);border-radius:8px;cursor:pointer}
+.chip{flex:1 1 110px;min-height:44px;font:700 14px B612,sans-serif;padding:8px 6px;background:transparent;color:var(--c);border:1px solid var(--line);border-radius:8px;cursor:pointer}
 .chip[aria-pressed=true]{border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
 .chip[aria-pressed=false]{opacity:.5}
 .chip .k{margin-left:8px;font-family:"B612 Mono",monospace}
@@ -123,7 +124,7 @@ input,select,button{font:16px B612,sans-serif;min-height:44px;width:100%;padding
     <option value="auto">Automática</option><option value="lol">adsb.lol</option><option value="live">airplanes.live</option><option value="fi">adsb.fi</option><option value="demo">Demo (simulado)</option></select></div>
   <div class="btns"><button type="submit" class="pri">Aplicar</button><button type="button" id="geo">Usar mi ubicación</button></div>
 </form>
-<p class="note">Por defecto: aeropuerto de Córdoba (SACO). Ruta (origen/destino) de adsbdb.com cuando está disponible; aerolínea por prefijo OACI del indicativo. Fase: <b>despegue</b> si sube más de 300 ft/min por debajo de 15.000 ft; <b>aterrizaje</b> si baja más de 300 ft/min por debajo de 15.000 ft; <b>en tierra</b> si el transpondedor informa "ground"; el resto, <b>en ruta</b>. El criterio es por régimen vertical: un avión que desciende hacia otro aeródromo cercano también figura como aterrizaje. Mapa: © OpenStreetMap, © CARTO.</p>
+<p class="note">Por defecto: aeropuerto de Córdoba (SACO). Ruta (origen/destino) de adsbdb.com cuando está disponible; aerolínea por prefijo OACI del indicativo. Fase: <b>despegue</b> si sube más de 300 ft/min por debajo de 15.000 ft; <b>aterrizaje</b> si baja más de 300 ft/min por debajo de 15.000 ft; <b>en tierra</b> si el transpondedor informa "ground"; el resto, <b>en ruta</b>. El criterio es por régimen vertical: un avión que desciende hacia otro aeródromo cercano también figura como aterrizaje. Mapa: © Esri, © OpenStreetMap.</p>
 </details>
 </div>
 
@@ -153,13 +154,13 @@ const R=6371,rad=d=>d*Math.PI/180,deg=r=>r*180/Math.PI;
 function dist(a1,o1,a2,o2){const da=rad(a2-a1),dO=rad(o2-o1),h=Math.sin(da/2)**2+Math.cos(rad(a1))*Math.cos(rad(a2))*Math.sin(dO/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
 function brg(a1,o1,a2,o2){const y=Math.sin(rad(o2-o1))*Math.cos(rad(a2)),x=Math.cos(rad(a1))*Math.sin(rad(a2))-Math.sin(rad(a1))*Math.cos(rad(a2))*Math.cos(rad(o2-o1));return(deg(Math.atan2(y,x))+360)%360}
 function dest(a,o,b,d){const dr=d/R,p1=rad(a),l1=rad(o),t=rad(b),p2=Math.asin(Math.sin(p1)*Math.cos(dr)+Math.cos(p1)*Math.sin(dr)*Math.cos(t));return [deg(p2),deg(l1+Math.atan2(Math.sin(t)*Math.sin(dr)*Math.cos(p1),Math.cos(dr)-Math.sin(p1)*Math.sin(p2)))]}
-const card=b=>['N','NE','E','SE','S','SO','O','NO'][Math.round(b/45)%8];
+const card=b=>['N','NE','E','SE','S','SW','W','NW'][Math.round(b/45)%8];
 const icao=cs=>{const p=(cs||'').slice(0,3);return /^[A-Z]{3}$/.test(p)&&/\d/.test(cs.slice(3,4))?p:null};
 const airline=cs=>{const p=icao(cs);return p?(AIRL[p]||p):null};
 const logo=(cs,cls)=>{const c=PROXY&&icao(cs);return c?`<img class="${cls}" src="/logo/${c}" alt="" onerror="this.remove()">`:''};
 const phase=f=>f.gnd?'gnd':(f.vr!=null&&f.alt<ALT_TMA)?(f.vr>VR?'dep':f.vr<-VR?'arr':'cru'):'cru';
 const vis=()=>flights.filter(f=>C.f[f.ph]);
-const fmt=n=>Math.round(n).toLocaleString('es-AR');
+const fmt=n=>String(Math.round(n));
 
 async function get(url,ms=8000){const ac=new AbortController(),t=setTimeout(()=>ac.abort(),ms);try{const r=await fetch(url,{signal:ac.signal});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json()}finally{clearTimeout(t)}}
 
@@ -168,7 +169,8 @@ let map=null;const LY={};
 function initMap(){
   if(!window.L){$('map').innerHTML='<div class="nomap">No se pudo cargar el mapa (sin internet o librería bloqueada).</div>';return}
   map=L.map('map',{zoomSnap:.25,attributionControl:true}).setView([C.lat,C.lon],10);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:18,attribution:'&copy; OpenStreetMap &copy; CARTO'}).addTo(map);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',{maxZoom:16,attribution:'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap'}).addTo(map);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',{maxZoom:16,opacity:.8}).addTo(map);
   LY.rose=L.layerGroup().addTo(map);LY.trails=L.layerGroup().addTo(map);LY.ac=L.layerGroup().addTo(map);
   drawRose();
 }
@@ -180,7 +182,7 @@ function drawRose(){
   L.circle(c,{radius:Rr*1000,color:'#5a7590',weight:1.5,fill:false,interactive:false}).addTo(LY.rose);
   label(dest(C.lat,C.lon,135,Rr),Rr+' km').addTo(LY.rose);
   for(let b=0;b<360;b+=5){const k=b%30===0?.93:b%10===0?.96:.98;L.polyline([dest(C.lat,C.lon,b,Rr*k),dest(C.lat,C.lon,b,Rr)],{color:'#6f87a0',weight:1,interactive:false}).addTo(LY.rose)}
-  for(let b=0;b<360;b+=30)label(dest(C.lat,C.lon,b,Rr*1.06),{0:'N',90:'E',180:'S',270:'O'}[b]||String(b/10),'c').addTo(LY.rose);
+  for(let b=0;b<360;b+=30)label(dest(C.lat,C.lon,b,Rr*1.06),{0:'N',90:'E',180:'S',270:'W'}[b]||String(b/10),'c').addTo(LY.rose);
   L.marker(c,{interactive:false,icon:L.divIcon({className:'',iconSize:[22,22],iconAnchor:[11,11],html:'<svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#ff4fd8" stroke-width="1.5"><circle cx="11" cy="11" r="4"/><path d="M11 0v6M11 16v6M0 11h6M16 11h6"/></svg>'})}).addTo(LY.rose);
   const e=Rr*1.12;map.fitBounds(L.latLngBounds([dest(C.lat,C.lon,0,e),dest(C.lat,C.lon,90,e),dest(C.lat,C.lon,180,e),dest(C.lat,C.lon,270,e)]),{padding:[4,4]});
 }
@@ -271,7 +273,7 @@ function render(){
       <div><b>Rumbo [°]</b>${f.trk!=null?esc(String(Math.round(f.trk)).padStart(3,'0')):'—'}</div>
       <div><b>Distancia [km]</b>${esc(f.d.toFixed(1))} ${card(f.b)}</div>
       <div><b>Matrícula</b>${esc(f.reg||'—')}</div>
-      <div><b>Modelo</b>${esc(i.type)}</div>
+      <div class="w2"><b>Modelo</b>${esc(i.type)}</div>
     </div></div>`;
   }
   drawAC();

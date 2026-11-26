@@ -32,7 +32,7 @@ Requiere Python 3 (solo biblioteca estándar) y conexión a internet. Si la TV o
 | Posiciones ADS-B | adsb.lol → airplanes.live → adsb.fi (en ese orden si una falla) |
 | Ruta y aerolínea | adsbdb.com (por indicativo; no siempre está) |
 | Logos | repositorio Jxck-S/airline-logos (GitHub), por código OACI |
-| Mapa base | © OpenStreetMap, © CARTO (dark) |
+| Mapa base | Esri World Dark Gray (sin clave), © OpenStreetMap |
 
 ## Criterios
 
