@@ -130,7 +130,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
 class Servidor(socketserver.ThreadingMixIn, http.server.HTTPServer):
     daemon_threads = True
-    allow_reuse_address = True
+    # En Windows, SO_REUSEADDR deja abrir dos servidores en el mismo puerto y contesta el viejo
+    allow_reuse_address = sys.platform != "win32"
 
 
 def ip_local():
@@ -146,7 +147,13 @@ def ip_local():
 
 
 if __name__ == "__main__":
-    with Servidor(("0.0.0.0", PUERTO), Handler) as srv:
+    try:
+        srv = Servidor(("0.0.0.0", PUERTO), Handler)
+    except OSError:
+        print(f"El puerto {PUERTO} está ocupado: ya hay otro servidor abierto.")
+        print("Cerrá las otras ventanas de terminal (o finalizá Python en el Administrador de tareas) y volvé a abrir.")
+        sys.exit(1)
+    with srv:
         url = f"http://localhost:{PUERTO}"
         print(f"En esta PC:          {url}")
         print(f"Desde TV o celular:  http://{ip_local()}:{PUERTO}")
