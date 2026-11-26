@@ -4,6 +4,10 @@ Pantalla con los aviones que pasan dentro de un radio alrededor de tu ubicación
 
 ## Uso
 
+Windows: doble clic en `iniciar.bat`.
+
+Otra forma, desde una terminal en la carpeta:
+
 ```
 python servidor_vuelos.py
 ```
@@ -18,6 +22,7 @@ Requiere Python 3 (solo biblioteca estándar) y conexión a internet. Si la TV o
 | Archivo | Función |
 |---|---|
 | `pantalla_vuelos.html` | Página (panel, mapa Leaflet, filtros, listas, configuración) |
+| `iniciar.bat` | Arranque con doble clic en Windows (se ubica en su carpeta y corre el servidor) |
 | `servidor_vuelos.py` | Sirve la página y reenvía las consultas a las APIs (evita el bloqueo CORS del navegador); descarga y guarda en caché los logos en `logos/` |
 
 ## Fuentes de datos

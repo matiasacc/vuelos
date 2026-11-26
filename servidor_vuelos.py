@@ -20,6 +20,7 @@ import webbrowser
 PUERTO = 8000
 CARPETA = pathlib.Path(__file__).resolve().parent
 HTML = CARPETA / "pantalla_vuelos.html"
+HTML_GITHUB = "https://raw.githubusercontent.com/matiasacc/vuelos/main/pantalla_vuelos.html"
 UA = {"User-Agent": "pantalla-vuelos/1.0 (uso personal)"}
 
 FUENTES = {
@@ -42,6 +43,19 @@ FUENTES_LOGO = [
 SIN_LOGO = set()  # códigos ya buscados sin resultado (en esta sesión)
 
 
+def pagina():
+    """Devuelve el HTML: el de la carpeta, una copia con otro nombre, o lo baja de GitHub."""
+    if HTML.exists():
+        return HTML.read_bytes()
+    copias = sorted(CARPETA.glob("pantalla_vuelos*.html"))
+    if copias:
+        return copias[0].read_bytes()
+    print("  pantalla_vuelos.html no está en la carpeta: lo bajo de GitHub")
+    _, datos = descargar(HTML_GITHUB)
+    HTML.write_bytes(datos)
+    return datos
+
+
 def descargar(url, timeout=10):
     req = urllib.request.Request(url, headers=UA)
     with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -60,9 +74,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         ruta = urllib.parse.urlparse(self.path).path
         if ruta in ("/", "/index.html", "/pantalla_vuelos.html"):
-            if not HTML.exists():
-                return self.enviar(404, b"Falta pantalla_vuelos.html en la misma carpeta", "text/plain")
-            return self.enviar(200, HTML.read_bytes(), "text/html")
+            try:
+                return self.enviar(200, pagina(), "text/html")
+            except Exception as e:
+                msg = f"No encuentro pantalla_vuelos.html ni pude bajarlo de GitHub: {e}"
+                return self.enviar(500, msg.encode(), "text/plain")
 
         m = RE_API.match(ruta)
         if m:
